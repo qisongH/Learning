@@ -2,6 +2,7 @@
 
 * [排序算法](#排序算法)
 * * [桶排序](#桶排序)
+* [二分查找](#二分查找)
 
 
 
@@ -234,3 +235,80 @@ public:
 利用桶的概念，将每个字符映射到一个**数组**里，这个数组能够记录字符的**顺序和个数**；
 
 再对这个数组*（桶）*从前往后和从后往前遍历即可，可以分别得到上升序列和下降序列；
+
+## 二分查找
+
+* **例子1：**
+
+[leetcode 34](https://leetcode-cn.com/problems/find-first-and-last-position-of-element-in-sorted-array/)
+
+> 给定一个按照升序排列的整数数组 nums，和一个目标值 target。找出给定目标值在数组中的开始位置和结束位置。
+>
+> 如果数组中不存在目标值 target，返回 [-1, -1]。
+
+**示例 1**
+
+```
+输入：nums = [5,7,7,8,8,10], target = 8
+输出：[3,4]
+```
+
+*针对有序数组，可以采用二分查找实现时间复杂度为 O(log n) 的算法*
+
+本题分两步，一是找到目标值在数组中的起始位置，二是找到目标值在数组中的结束位置
+
+```C++
+    int FindFirstPos(vector<int> &nums, int target)
+    {
+        int len = nums.size();
+        int low = 0, high = len - 1;
+        // 先找到起始位置（高位逐次逼近）
+        while (low < high)
+        {
+            int mid = low + (high - low) / 2;
+            if (nums[mid] < target)
+            {
+                low = mid + 1;
+            }
+            else if (nums[mid] == target)
+            {
+                high = mid; // 高位逐次逼近
+            }
+            else    // nums[mid] > target
+            {
+                high = mid - 1;
+            }
+        }
+        // 不存在 target
+        if (nums[low] != target)
+            return -1;
+        return low;
+    }
+```
+
+```C++
+    int FindLastPos(vector<int> &nums, int target)
+    {
+        int len = nums.size();
+        int low = 0, high = len - 1;
+        // 再确定结束位置（低位逐次逼近）
+        while (low < high)
+        {
+            int mid = low + (high - low + 1) / 2;   // 注意这里的区别
+            if (nums[mid] < target)
+            {
+                low = mid + 1;
+            }
+            else if (nums[mid] == target)
+            {
+                low = mid; // 低位逐次逼近
+            }
+            else    // nums[mid] > target
+            {
+                high = mid - 1;
+            }
+        }
+        return low;
+    }
+```
+
