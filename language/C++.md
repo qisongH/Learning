@@ -9,6 +9,7 @@
 * [const关键字](#const关键字)
 * * [define关键字](#define关键字)
 * [volatile关键字](#volatile关键字)
+* [类型转换机制](#类型转换机制)
 
 
 
@@ -206,5 +207,128 @@ int SendByte(void)	// 优化后
 }
 ```
 
+## 类型转换机制
 
+> C++中，与类型转换相关的四个关键字：
+>
+> static_cast、const_cast、reinterpret_cast、dynamic_cast
+
+* **static_cast**
+
+特点：静态转换，在**编译**处理阶段。
+
+应用场合：
+
+> 1、主要用于C++中**内置的基本数据类型**之间的转换，但是没有**运行时类型的检测来保证转换的安全性**；
+>
+> 2、**用于基类和子类之间的指针或引用之间的转换**，上行安全（子类-》基类），下行不安全（基类-》子类）；
+>
+> 3、把void类型的指针转换成目标类型的指针（不安全）；
+>
+> 4、不能用于两个不相关的类型转换；
+>
+> 5、不能把const对象转换成非const对象。
+
+
+
+* **const_cast**
+
+特点：去常转换，**编译时执行**。不是运行时执行。
+
+应用场合：
+
+> const_cast操作不能在不同的种类间转换。相反，它仅仅把它作用的表达式转换成常量。它可以使一个本来不是const类型的数据转换成const类型的，或者把const属性去掉（因为**不能把一个const变量直接赋给非const变量**，反之可行）。 
+
+```C++
+int main()
+{
+    const int constant = 26;
+    const int* const_p = &constant;
+    int* modifier = const_cast<int*>(const_p);	// const指针-》非const指针
+    *modifier = 3;
+    cout<< "constant:  "<<constant<<endl;  //26
+    cout<<"*modifier:  "<<*modifier<<endl;   //3
+    return 0;
+}
+```
+
+**注意：const_cast只能转换指针或引用，不能转换变量**
+
+```C++
+const int i = 3;
+int j = const_cast<int>(i);		// 错误
+```
+
+
+
+* **reinterpret_cast**
+
+特点： 重解释类型转换。
+
+应用场合：
+
+> **和 C 风格强制类型转换同样的功能**；可以转化任何的内置数据类型为其他的类型，同时它也可以把任何类型的指针转化为其他的类型；它的机理是对二进制进行重新的解释，不会改变原来的格式。
+
+
+
+* **dynamic_cast <type-id>(expression)**
+
+含义：将一个指向基类的指针转换成指向派生类的指针（下行转换）；如果失败，返回空指针。
+
+该运算符将expression转换成type_id类型的对象。*type_id必须是类的指针，类的引用或者空类型的指针。*
+
+> a、类型相同：如果type_id是一个指针类型，那么expression也必须是一个指针类型，如果type_id是一个引用类型，那么expression也必须是一个引用类型。
+>
+> b、类型检测：如果type_id是一个空类型的指针，**在运行的时候，就会检测expression的实际类型，结果是一个由expression决定的指针类型**。
+>
+> c、如果type_id不是空类型的指针，在运行的时候**指向expression对象的指针**能否可以转换成type_id类型的指针。
+>
+> d、安全检测：在运行的时候决定真正的类型，**如果向下转换是安全的，就返回一个转换后的指针，若不安全，则返回一个空指针**。
+>
+> e、主要用于上下行之间的转换，也可以用于类之间的交叉转换。**上行转换时和static_cast效果一样，下行转换时，具有检测功能，比static_cast更安全**。
+
+```C++
+class CBasic{
+public:
+ 
+    CBasic(){};
+    ~CBasic(){};
+    virtual void speak() {     //要有virtual才能实现多态，才能使用dynamic cast，如果父类没有虚函数，是编译不过的
+        printf("dsdfsd");
+    }
+private:
+ 
+};
+ 
+//哺乳动物类
+class cDerived:public CBasic{
+public:
+    cDerived(){};
+    ~cDerived(){};
+private:
+};
+ 
+int main()
+{
+     CBasic  cBasic;
+     CDerived  cDerived;
+     
+     CBasic * pB1 = new CBasic;
+     CBasic * pB2 = new CDerived;
+     
+     //dynamic cast failed, so pD1 is null.  pB1指向对象和括号里的Derived *不一样，转换失败
+     CDerived * pD1 = dynamic_cast<CDerived * > (pB1);    
+     
+     //dynamic cast succeeded, so pD2 points to  CDerived object       
+     //dynamic cast 用于将指向子类的父类指针或引用，转换为子类指针或引用 ，pB2指向对象和括号里的Derived *一样，转换成功    
+     CDerived * pD2 = dynamic_cast<CDerived * > (pB2);    
+     
+     //dynamci cast failed, so throw an exception.             
+     CDerived & rD1 = dynamic_cast<CDerived &> (*pB1);   
+     
+     //dynamic cast succeeded, so rD2 references to CDerived object.
+     CDerived & rD2 = dynamic_cast<CDerived &> (*pB2);    
+     return 0;
+}
+```
 
