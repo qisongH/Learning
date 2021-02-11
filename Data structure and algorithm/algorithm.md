@@ -3,6 +3,8 @@
 * [排序算法](#排序算法)
 * * [桶排序](#桶排序)
 * [二分查找](#二分查找)
+* [TopK问题](#TopK问题)
+* * [手写小(大)根堆](#手写小(大)根堆)
 
 
 
@@ -310,5 +312,173 @@ public:
         }
         return low;
     }
+```
+
+## TopK问题
+
+* **例子1：**
+
+[leetcode 703](#https://leetcode-cn.com/problems/kth-largest-element-in-a-stream/)
+
+> 设计一个找到数据流中第 k 大元素的类（class）。注意是排序后的第 k 大元素，不是第 k 个不同的元素。
+>
+> 请实现 KthLargest 类：
+>
+> KthLargest(int k, int[] nums) 使用整数 k 和整数流 nums 初始化对象。
+> int add(int val) 将 val 插入数据流 nums 后，返回当前数据流中第 k 大的元素。
+
+**示例 1**
+
+```
+输入：
+["KthLargest", "add", "add", "add", "add", "add"]
+[[3, [4, 5, 8, 2]], [3], [5], [10], [9], [4]]
+输出：
+[null, 4, 5, 5, 8, 8]
+
+解释：
+KthLargest kthLargest = new KthLargest(3, [4, 5, 8, 2]);
+kthLargest.add(3);   // return 4
+kthLargest.add(5);   // return 5
+kthLargest.add(10);  // return 5
+kthLargest.add(9);   // return 8
+kthLargest.add(4);   // return 8
+
+```
+
+**思路与算法**
+
+如果底层架构使用数组的话，每次调用 *add()* 函数，都需要向数组中添加一个元素，然后使用 *sort()* 进行排序，并返回排序后数组的第 *K* 个数字，其时间复杂度为 *O(K log(K))* 。
+
+数组的核心问题是 **自身不带排序功能**，因此使用自带排序功能的数据结构——**堆**
+
+![](https://i.loli.net/2021/02/11/syJdDiCMxkWg12w.png)
+
+>本题的操作步骤如下：
+>
+>使用大小为 K 的**小根堆**，在初始化的时候，保证堆中的元素个数不超过 K 。
+>在每次 ```add()``` 的时候，将新元素``` push()``` 到堆中，如果此时堆中的元素超过了 K，那么需要把堆中的最小元素（堆顶）```pop()``` 出来。
+>此时堆中的最小元素（堆顶）就是整个数据流中的第 K 大元素。
+>
+>**问答：**
+>1、为什么使用小根堆？
+>因为我们需要在堆中保留数据流中的前 K 大元素，使用小根堆能保证每次调用堆的 ```pop()``` 函数时，从堆中删除的是堆中的最小的元素（堆顶）。
+>2、为什么能保证堆顶元素是第 K 大元素？
+>因为小根堆中保留的一直是堆中的前 K 大的元素，*堆的大小是 K*，所以堆顶元素是第 K 大元素。
+>3、每次 ```add()``` 的时间复杂度是多少？
+>每次 `add()` 时，调用了堆的 `push()` 和 `pop()` 方法，两个操作的时间复杂度都是 log(K)。
+
+```C++
+class KthLargest {
+public:
+    priority_queue<int, vector<int>, greater<int>> q;
+    int k;
+    KthLargest(int k, vector<int>& nums) {
+        this->k = k;
+        for (auto& x: nums) {
+            add(x);
+        }
+    }
+    
+    int add(int val) {
+        q.push(val);
+        if (q.size() > k) {
+            q.pop();
+        }
+        return q.top();
+    }
+};
+
+```
+
+### 手写小(大)根堆
+
+[题解](#https://leetcode-cn.com/problems/kth-largest-element-in-a-stream/solution/python-dong-hua-shou-xie-shi-xian-dui-by-ypz2/)
+
+```C
+struct Heap {
+    int* heap;
+    int heapSize;
+    bool (*cmp)(int, int);
+};
+
+void init(struct Heap* obj, int n, bool (*cmp)(int, int)) {
+    obj->heap = malloc(sizeof(int) * (n + 1));
+    obj->heapSize = 0;
+    obj->cmp = cmp;
+}
+
+bool cmp(int a, int b) {
+    return a > b;
+}
+
+void swap(int* a, int* b) {
+    int tmp = *a;
+    *a = *b, *b = tmp;
+}
+
+void push(struct Heap* obj, int x) {
+    int p = ++(obj->heapSize), q = p >> 1;
+    obj->heap[p] = x;
+    while (q) {
+        if (!obj->cmp(obj->heap[q], obj->heap[p])) {
+            break;
+        }
+        swap(&(obj->heap[q]), &(obj->heap[p]));
+        p = q, q = p >> 1;
+    }
+}
+
+void pop(struct Heap* obj) {
+    swap(&(obj->heap[1]), &(obj->heap[(obj->heapSize)--]));
+    int p = 1, q = p << 1;
+    while (q <= obj->heapSize) {
+        if (q + 1 <= obj->heapSize) {
+            if (obj->cmp(obj->heap[q], obj->heap[q + 1])) {
+                q++;
+            }
+        }
+        if (!obj->cmp(obj->heap[p], obj->heap[q])) {
+            break;
+        }
+        swap(&(obj->heap[q]), &(obj->heap[p]));
+        p = q, q = p << 1;
+    }
+}
+
+int top(struct Heap* obj) {
+    return obj->heap[1];
+}
+
+typedef struct {
+    struct Heap* heap;
+    int maxSize;
+} KthLargest;
+
+KthLargest* kthLargestCreate(int k, int* nums, int numsSize) {
+    KthLargest* ret = malloc(sizeof(KthLargest));
+    ret->heap = malloc(sizeof(struct Heap));
+    init(ret->heap, k + 1, cmp);
+    ret->maxSize = k;
+    for (int i = 0; i < numsSize; i++) {
+        kthLargestAdd(ret, nums[i]);
+    }
+    return ret;
+}
+
+int kthLargestAdd(KthLargest* obj, int val) {
+    push(obj->heap, val);
+    if (obj->heap->heapSize > obj->maxSize) {
+        pop(obj->heap);
+    }
+    return top(obj->heap);
+}
+
+void kthLargestFree(KthLargest* obj) {
+    free(obj->heap->heap);
+    free(obj->heap);
+    free(obj);
+}
+
 ```
 
