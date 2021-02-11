@@ -318,7 +318,7 @@ public:
 
 * **例子1：**
 
-[leetcode 703](#https://leetcode-cn.com/problems/kth-largest-element-in-a-stream/)
+[leetcode 703](https://leetcode-cn.com/problems/kth-largest-element-in-a-stream/)
 
 > 设计一个找到数据流中第 k 大元素的类（class）。注意是排序后的第 k 大元素，不是第 k 个不同的元素。
 >
@@ -393,7 +393,7 @@ public:
 
 ### 手写小(大)根堆
 
-[题解](#https://leetcode-cn.com/problems/kth-largest-element-in-a-stream/solution/python-dong-hua-shou-xie-shi-xian-dui-by-ypz2/)
+[题解](https://leetcode-cn.com/problems/kth-largest-element-in-a-stream/solution/python-dong-hua-shou-xie-shi-xian-dui-by-ypz2/)
 
 ```C
 struct Heap {
