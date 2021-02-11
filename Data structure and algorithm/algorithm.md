@@ -396,27 +396,49 @@ public:
 [题解](https://leetcode-cn.com/problems/kth-largest-element-in-a-stream/solution/python-dong-hua-shou-xie-shi-xian-dui-by-ypz2/)
 
 ```C
+/*
+	堆 数据结构
+	heap -> 存储数据的数组 heap[0]用于过渡
+	heapSize -> 堆的元素个数
+	cmp -> 小/大根堆的函数指针
+*/
 struct Heap {
     int* heap;
     int heapSize;
     bool (*cmp)(int, int);
 };
 
+/*
+	初始化函数
+*/
 void init(struct Heap* obj, int n, bool (*cmp)(int, int)) {
     obj->heap = malloc(sizeof(int) * (n + 1));
     obj->heapSize = 0;
     obj->cmp = cmp;
 }
 
+/*
+	比较函数
+*/
 bool cmp(int a, int b) {
     return a > b;
 }
 
+/*
+	交换两个函数
+*/
 void swap(int* a, int* b) {
     int tmp = *a;
     *a = *b, *b = tmp;
 }
 
+/*
+	添加元素 同时需要调整元素的顺序（向上调整）
+	1、首先把元素添加到数组的末尾，元素个数加1
+	2、调整元素顺序，新元素(p)与其父节点(p/2)比较大小【p:元素索引】
+	3、新元素小于父节点则交换位置（小根堆）
+	4、重复步骤2、3直至结束
+*/
 void push(struct Heap* obj, int x) {
     int p = ++(obj->heapSize), q = p >> 1;
     obj->heap[p] = x;
@@ -429,6 +451,13 @@ void push(struct Heap* obj, int x) {
     }
 }
 
+/*
+	弹出堆顶元素 同时需要调整元素的顺序（向下调整）
+	1、首先把堆顶元素和尾元素交换，把元素个数减1（不是真正的弹出）
+	2、调整元素顺序，新元素(p)与其孩子节点(p*2 和 p*2+1)比较大小【p:元素索引】
+	3、新元素若小于孩子节点，则与其【较小】的孩子节点交换位置
+	4、重复步骤2、3直至结束
+*/
 void pop(struct Heap* obj) {
     swap(&(obj->heap[1]), &(obj->heap[(obj->heapSize)--]));
     int p = 1, q = p << 1;
@@ -446,19 +475,29 @@ void pop(struct Heap* obj) {
     }
 }
 
+/*
+	返回堆顶元素
+*/
 int top(struct Heap* obj) {
     return obj->heap[1];
 }
 
+/*
+	TOPK 结构体
+*/
 typedef struct {
     struct Heap* heap;
     int maxSize;
 } KthLargest;
 
+/*
+	创建 TOPK 结构体
+*/
 KthLargest* kthLargestCreate(int k, int* nums, int numsSize) {
-    KthLargest* ret = malloc(sizeof(KthLargest));
+    KthLargest* ret = malloc(sizeof(KthLargest));	// 分配空间
     ret->heap = malloc(sizeof(struct Heap));
-    init(ret->heap, k + 1, cmp);
+    
+    init(ret->heap, k + 1, cmp);		// k+1 避免初始化时数组是空的情况
     ret->maxSize = k;
     for (int i = 0; i < numsSize; i++) {
         kthLargestAdd(ret, nums[i]);
@@ -475,7 +514,7 @@ int kthLargestAdd(KthLargest* obj, int val) {
 }
 
 void kthLargestFree(KthLargest* obj) {
-    free(obj->heap->heap);
+    free(obj->heap->heap);		// 一级一级释放空间
     free(obj->heap);
     free(obj);
 }
