@@ -5,6 +5,7 @@
 * [二分查找](#二分查找)
 * [TopK问题](#TopK问题)
 * * [手写小(大)根堆](#手写小(大)根堆)
+* [数组映射](#数组映射)
 
 
 
@@ -520,4 +521,54 @@ void kthLargestFree(KthLargest* obj) {
 }
 
 ```
+
+
+
+## 数组映射
+
+[leetcode 566](https://leetcode-cn.com/problems/reshape-the-matrix/)
+
+>给出一个由二维数组表示的矩阵，以及两个正整数r和c，分别表示想要的重构的矩阵的行数和列数。
+>
+>重构后的矩阵需要将原始矩阵的所有元素以相同的**行遍历顺序**填充。
+>
+>如果具有给定参数的reshape操作是可行且合理的，则输出新的重塑矩阵；否则，输出原始矩阵。
+
+```
+输入: 
+nums = 
+[[1,2],
+ [3,4]]
+r = 1, c = 4
+输出: 
+[[1,2,3,4]]
+解释:
+行遍历nums的结果是 [1,2,3,4]。新的矩阵是 1 * 4 矩阵, 用之前的元素值一行一行填充新矩阵。
+```
+
+**思路和算法**
+
+![](https://i.loli.net/2021/02/17/9u5mevzsgL1QXMx.png)
+
+```C++
+class Solution {
+public:
+    vector<vector<int>> matrixReshape(vector<vector<int>>& nums, int r, int c) {
+        int m = nums.size();
+        int n = nums[0].size();
+        if (m * n != r * c) {
+            return nums;
+        }
+
+        vector<vector<int>> ans(r, vector<int>(c));
+        for (int x = 0; x < m * n; ++x) {
+            ans[x / c][x % c] = nums[x / n][x % n];
+        }
+        return ans;
+    }
+};
+
+```
+
+
 
