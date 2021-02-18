@@ -572,3 +572,185 @@ public:
 
 
 
+## 滑动窗口
+
+**例子1：**
+
+[leetcode955](https://leetcode-cn.com/problems/minimum-number-of-k-consecutive-bit-flips/)
+
+>在仅包含 0 和 1 的数组 A 中，一次 K 位翻转包括选择一个长度为 K 的（连续）子数组，同时将子数组中的每个 0 更改为 1，而每个 1 更改为 0。
+>
+>返回所需的 K 位翻转的最小次数，以便数组没有值为 0 的元素。如果不可能，返回 -1。
+>
+
+```
+输入：A = [0,1,0], K = 1
+输出：2
+解释：先翻转 A[0]，然后翻转 A[2]。
+
+输入：A = [1,1,0], K = 2
+输出：-1
+解释：无论我们怎样翻转大小为 2 的子数组，我们都不能使数组变为 [1,1,1]。
+
+输入：A = [0,0,0,1,0,1,1,0], K = 3
+输出：3
+解释：
+翻转 A[0],A[1],A[2]: A变成 [1,1,1,1,0,1,1,0]
+翻转 A[4],A[5],A[6]: A变成 [1,1,1,1,1,0,0,0]
+翻转 A[5],A[6],A[7]: A变成 [1,1,1,1,1,1,1,1]
+```
+
+**方法1：暴力模拟**
+
+直接遍历数组A，当 *A[i]==0* 时，就把区间【i，i+K】全部进行翻转，直到 i+K == A.size()。**但是会超时，时间复杂度 O(NK)**
+
+```C++
+class Solution {
+public:
+    int minKBitFlips(vector<int>& A, int K) {
+        int len = A.size(), ansMin = 0;
+        int i = 0;
+        
+        while (i <= len - K)
+        {
+            if (A[i] == 1)
+            {
+                ++ i;
+                continue;
+            }
+
+            for (int j = 0; j < K; ++ j)
+            {
+                A[i + j] = A[i + j] == 0 ? 1 : 0;
+            }
+            ++ i;
+            ++ ansMin;
+        }
+
+        if (find(A.begin(), A.end(), 0) != A.end())
+        {
+            return -1;
+        }
+        else
+            return ansMin;
+    }
+};
+```
+
+**方法2：差分数组**
+
+根据方法1的思路，**考虑不去翻转数字，而是统计每个数字需要翻转的次数**；
+
+一次翻转是对【i,i+K-1】区间的数都进行了改变，而对于区间操作，有一种常见的方法——**差分**（前缀和的逆运用，对区间两端进行操作以代替区间内操作）；
+
+**差分数组diff[i]**：表示两个相邻元素A[i-1]和A[i]的**翻转次数的差**，对于区间【l，r】，将其元素全部加1（这个区间内所有元素翻转一次），只会影响 diff[l] 和 diff[r+1] 处的值，即 diff[l] + 1，diff[r+1] - 1；
+
+再用一个变量 rcvCnt 记录当前位置（当前区间）翻转的次数。
+
+```C++
+class Solution {
+public:
+    int minKBitFlips(vector<int> &A, int K) {
+        int n = A.size();
+        vector<int> diff(n + 1);
+        int ans = 0, revCnt = 0;
+        for (int i = 0; i < n; ++i) {
+            revCnt += diff[i];
+            if ((A[i] + revCnt) % 2 == 0) {
+                if (i + K > n) {
+                    return -1;
+                }
+                ++ans;
+                ++revCnt;
+                --diff[i + K];
+            }
+        }
+        return ans;
+    }
+};
+```
+
+模2意义下的加减法与异或等价，因此可以用异或改写代码。
+
+```C++
+class Solution {
+public:
+    int minKBitFlips(vector<int> &A, int K) {
+        int n = A.size();
+        vector<int> diff(n + 1);
+        int ans = 0, revCnt = 0;
+        for (int i = 0; i < n; ++i) {
+            revCnt ^= diff[i];
+            if (A[i] == revCnt) { // A[i] ^ revCnt == 0
+                if (i + K > n) {
+                    return -1;
+                }
+                ++ans;
+                revCnt ^= 1;
+                diff[i + K] ^= 1;
+            }
+        }
+        return ans;
+    }
+};
+```
+
+*模拟过程*
+
+```
+输入：A = [0,0,0,1,0,1,1,0], K = 3
+
+1、
+i = 0, ans = 1, revCnt = 1,
+diff = [0,0,0,1,0,0,0,0]
+A_ = [1,1,1,1,0,1,1,0]
+
+2、
+i = 4, ans = 2, revCnt = 0(在i=3时，由1->0),
+diff = [0,0,0,1,0,0,0,1]
+A_ = [1,1,1,1,1,0,0,0]
+
+3、
+i = 5, ans = 3, revCnt = 1(在i=4时，由0->1),
+diff = [0,0,0,1,0,0,0,1,(1)]
+A_ = [1,1,1,1,1,1,1,1]
+```
+
+**方法3：滑动窗口**
+
+上述方法中，数组 diff[] 用于记录区间的变化，revCnt 用于记录变化的次数，所以如果能知道位置 *i-K* 上发生了翻转操作，便可以直接修改 revCnt，从而去掉 diff[] 数组。
+
+**所以可以利用原数组A[i]范围之外的数来表达【是否翻转过】的含义**
+
+```C++
+class Solution {
+public:
+    int minKBitFlips(vector<int> &A, int K) {
+        int n = A.size();
+        int ans = 0, revCnt = 0;
+        for (int i = 0; i < n; ++i) {
+            if (i >= K && A[i - K] > 1) {
+                revCnt ^= 1;
+                A[i - K] -= 2; // 复原数组元素，若允许修改数组 A，则可以省略
+            }
+            if (A[i] == revCnt) {
+                if (i + K > n) {
+                    return -1;
+                }
+                ++ans;
+                revCnt ^= 1;
+                A[i] += 2;
+            }
+        }
+        return ans;
+    }
+};
+
+```
+
+
+
+
+
+
+
