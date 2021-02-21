@@ -842,5 +842,99 @@ def findSubArray(nums):
 
 
 
+**示例3：**
 
+[leetcode 1438](https://leetcode-cn.com/problems/longest-continuous-subarray-with-absolute-diff-less-than-or-equal-to-limit/)
+
+>给你一个整数数组 nums ，和一个表示限制的整数 limit，请你返回最长连续子数组的长度，该子数组中的任意两个元素之间的绝对差必须小于或者等于 limit 。
+>
+>如果不存在满足条件的子数组，则返回 0 。
+
+```
+输入：nums = [8,2,4,7], limit = 4
+输出：2 
+解释：所有子数组如下：
+[8] 最大绝对差 |8-8| = 0 <= 4.
+[8,2] 最大绝对差 |8-2| = 6 > 4. 
+[8,2,4] 最大绝对差 |8-2| = 6 > 4.
+[8,2,4,7] 最大绝对差 |8-2| = 6 > 4.
+[2] 最大绝对差 |2-2| = 0 <= 4.
+[2,4] 最大绝对差 |2-4| = 2 <= 4.
+[2,4,7] 最大绝对差 |2-7| = 5 > 4.
+[4] 最大绝对差 |4-4| = 0 <= 4.
+[4,7] 最大绝对差 |4-7| = 3 <= 4.
+[7] 最大绝对差 |7-7| = 0 <= 4. 
+因此，满足题意的最长子数组的长度为 2 。
+
+输入：nums = [10,1,2,4,7,2], limit = 5
+输出：4 
+解释：满足题意的最长子数组是 [2,4,7,2]，其最大绝对差 |2-7| = 5 <= 5 。
+
+输入：nums = [4,2,2,2,4,4,2,2], limit = 0
+输出：3
+```
+
+**思路**
+
+本题是求最大连续子区间，可以使用**滑动窗口**方法。滑动窗口的限制条件是：**窗口内最大值和最小值的差不超过 limit**。
+
+如果遍历求滑动窗口内的最大值和最小值，时间复杂度是 *O(k)*，肯定会超时。**降低时间复杂度的一个绝招就是增加空间复杂度：利用更好的数据结构**。是的，我们的目的是快速让一组数据有序，那就寻找一个内部是有序的数据结构呗！下面我分语言讲解一下常见的内部有序的数据结构。
+
+**在 C++ 中 set/multiset/map 内部元素是有序的，它们都基于红黑树实现。其中 set 会对元素去重，而 multiset 可以有重复元素，map 是 key 有序的哈希表。**
+
+```C++
+class Solution {
+public:
+    int longestSubarray(vector<int>& nums, int limit) {
+        multiset<int> st;
+        int left = 0, right = 0;
+        int res = 0;
+        while (right < nums.size()) {
+            st.insert(nums[right]);
+            while (*st.rbegin() - *st.begin() > limit) {
+                st.erase(st.find(nums[left]));
+                left ++;
+            }
+            res = max(res, right - left + 1);
+            right ++;
+        }
+        return res;
+    }
+};
+
+```
+
+**可以使用双端队列，同时维护区间内的最大值和最小值**
+
+```C++
+class Solution {
+public:
+    int longestSubarray(vector<int>& nums, int limit) {
+        int len = nums.size();
+        int ansLen = 0, left = 0;
+        deque<int> qmax, qmin;      // 降序队列、升序队列
+
+        for (int right = 0; right < len; ++ right)
+        {
+            while (!qmax.empty() && nums[right] > qmax.back())  // 维护队列降序
+                qmax.pop_back();
+            while (!qmin.empty() && nums[right] < qmin.back())  // 维护队列升序
+                qmin.pop_back();
+            qmax.push_back(nums[right]);
+            qmin.push_back(nums[right]);
+
+            while (qmax.front() - qmin.front() > limit)
+            {
+                if (nums[left] == qmax.front())
+                    qmax.pop_front();
+                if (nums[left] == qmin.front())
+                    qmin.pop_front();
+                ++ left;
+            }
+            ansLen = max(ansLen, right - left + 1);
+        }
+        return ansLen;
+    }
+};
+```
 
