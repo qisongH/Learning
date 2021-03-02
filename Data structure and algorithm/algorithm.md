@@ -10,6 +10,7 @@
 * * [模板[虫取法]](#模板[虫取法])
 * [递归](#递归)
 * * [解题思路](#解题思路)
+* [前缀和](#前缀和)
 
 
 
@@ -1041,4 +1042,64 @@ public:
 };
 
 ```
+
+## 前缀和
+
+**例子1：**
+
+[leetcode 303. 一维前缀和](https://leetcode-cn.com/problems/range-sum-query-immutable/)
+
+[leetcode 304. 二维前缀和](https://leetcode-cn.com/problems/range-sum-query-2d-immutable/comments/)
+
+>示例:
+>
+>给定 matrix = [
+>  [3, 0, 1, 4, 2],
+>  [5, 6, 3, 2, 1],
+>  [1, 2, 0, 1, 5],
+>  [4, 1, 0, 1, 7],
+>  [1, 0, 3, 0, 5]
+>]
+>
+>sumRegion(2, 1, 4, 3) -> 8
+>sumRegion(1, 1, 2, 2) -> 11
+>sumRegion(1, 2, 2, 4) -> 12
+
+[解题思路](https://leetcode-cn.com/problems/range-sum-query-2d-immutable/solution/ru-he-qiu-er-wei-de-qian-zhui-he-yi-ji-y-6c21/)
+
+**步骤1：**定义数组 preSum 表示从 [0, 0] 位置到 [i, j] 位置的子矩形所有元素之和。
+
+**步骤2：**在数组 preSum 的基础上，直接求 [row1, col1] 到 [row2, col2] 的和（求差）。
+
+```C++
+class NumMatrix {
+private:
+    vector<vector<int> > sumMatrix;
+
+public:
+    NumMatrix(vector<vector<int>>& matrix) {
+        int row = matrix.size();
+        if (row == 0)
+            return;
+
+        int col = matrix[0].size();
+        
+        sumMatrix.resize((row + 1), vector<int> (col + 1));       // row 行，col + 1 列
+
+        for (int i = 0; i < row; ++ i)
+        {
+            for (int j = 0; j < col; ++ j)
+            {
+                sumMatrix[i + 1][j + 1] = sumMatrix[i + 1][j] + sumMatrix[i][j + 1] - sumMatrix[i][j] + matrix[i][j];
+            }
+        }
+    }
+    
+    int sumRegion(int row1, int col1, int row2, int col2) {
+        return sumMatrix[row2 + 1][col2 + 1] - sumMatrix[row1][col2 + 1] - sumMatrix[row2 + 1][col1] + sumMatrix[row1][col1];
+    }
+};
+```
+
+
 
