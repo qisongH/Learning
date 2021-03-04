@@ -11,6 +11,7 @@
 * [递归](#递归)
 * * [解题思路](#解题思路)
 * [前缀和](#前缀和)
+* [动态规划](#动态规划)
 
 
 
@@ -1102,4 +1103,192 @@ public:
 ```
 
 
+
+## 动态规划
+
+**例子1：**
+
+[leetcode 354. 俄罗斯套娃信封问题](https://leetcode-cn.com/problems/russian-doll-envelopes/)
+
+>给定一些标记了宽度和高度的信封，宽度和高度以整数对形式 (w, h) 出现。当另一个信封的宽度和高度都比这个信封大的时候，这个信封就可以放进另一个信封里，如同俄罗斯套娃一样。
+>
+>请计算最多能有多少个信封能组成一组“俄罗斯套娃”信封（即可以把一个信封放到另一个信封里面）。
+>
+>说明:
+>不允许旋转信封。
+>
+>示例:
+>
+>输入: envelopes = [[5,4],[6,4],[6,7],[2,3]]
+>输出: 3 
+>解释: 最多信封的个数为 3, 组合为: [2,3] => [5,4] => [6,7]。
+
+**解题思路**
+
+* **题意：找出二维数组的一个排列，使得其中有最长的单调递增子序列（两个维度都递增）**
+
+「**遇事不决先排序**」，排序能让数据变成有序的，降低了混乱程度，往往就能帮助我们理清思路。
+
+[例题 单调递增子序列](https://leetcode-cn.com/problems/longest-increasing-subsequence/solution/dong-tai-gui-hua-er-fen-cha-zhao-tan-xin-suan-fa-p/)
+
+>首先考虑题目问什么，就把什么定义成状态。题目问最长上升子序列的长度，其实可以把「子序列的长度」定义成状态，但是发现「状态转移」不好做。
+>
+>**基于「动态规划」的状态设计需要满足「无后效性」的设计思想，可以将状态定义为「以 nums[i] 结尾 的「上升子序列」的长度」。**
+>
+>「无后效性」的设计思想：让不确定的因素确定下来，以保证求解的过程形成一个逻辑上的有向无环图。这题不确定的因素是某个元素是否被选中，**而我们设计状态的时候，让 nums[i] 必需被选中，这一点是「让不确定的因素确定下来」**，也是我们这样设计状态的原因。
+>
+>1. **定义状态：**
+>
+>dp[i] 表示：以 nums[i] 结尾 的「上升子序列」的长度。注意：这个定义中 nums[i] 必须被选取，且必须是这个子序列的最后一个元素；
+>
+>2. **状态转移方程：**
+>
+>如果一个较大的数接在较小的数后面，就会形成一个更长的子序列。**只要 nums[i] 严格大于在它位置之前的某个数，那么 nums[i] 就可以接在这个数后面形成一个更长的上升子序列**。
+>
+>3. **初始化：**
+>
+>dp[i] = 1，1 个字符显然是长度为 1 的上升子序列。
+>
+>4. **输出：**
+>
+>  不能返回最后一个状态值，最后一个状态值只表示以 nums[len - 1] 结尾的「上升子序列」的长度，**状态数组 dp 的最大值才是题目要求的结果**。
+>
+>5. 空间优化：
+>
+>遍历到一个新数的时候，之前所有的状态值都得保留，因此无法优化空间。
+>
+
+```C++
+class Solution {
+public:
+    int lengthOfLIS(vector<int>& nums) {
+        int len = nums.size();
+        if (len == 0)
+            return 0;
+        vector<int> dp(len, 1);    // dp[i]表示以 i 结尾的最大上升子序列
+        for (int i = 1; i < len; ++ i)
+        {
+            for (int j = 0; j < i; ++ j)
+            {
+                if (nums[i] > nums[j])
+                    dp[i] = max(dp[i], dp[j] + 1);
+            }
+        }
+        int ans(1);
+        for (int i = 0; i < len; ++ i)
+            ans = max(ans, dp[i]);
+        return ans;
+
+    }
+};
+```
+
+* **方法一：两个维度都递增的排序**
+
+第一感觉肯定是各种语言默认的排序方法：**两个维度都递增的顺序**。 对于题目给出的[[5,4],[6,4],[6,7],[2,3]]示例，如果按照两个维度都递增的排序方法，会得到：
+
+**[[2, 3], [5, 4], [6, 4], [6, 7]]**
+
+然后我们利用最长递增子序列的方法，即使用动态规划，**定义 *dp[i]* 表示以 i 结尾的最长递增子序列的长度**。对每个 i 的位置，遍历 *[0, i)*，对**两个维度同时判断是否是严格递增（不可相等）**的，如果是的话，**dp[i] = max(dp[i], dp[j] + 1)**。
+
+```C++
+class Solution {
+public:
+    int maxEnvelopes(vector<vector<int>>& envelopes) {
+        if (envelopes.empty()) {
+            return 0;
+        }
+        
+        int n = envelopes.size();
+        sort(envelopes.begin(), envelopes.end(), [](const auto& e1, const auto& e2) {
+            return e1[0] < e2[0] || (e1[0] == e2[0] && e1[1] < e2[1]);
+        });
+
+        vector<int> f(n, 1);
+        for (int i = 1; i < n; ++i) 
+        {
+            for (int j = 0; j < i; ++ j)
+            {
+                if (envelopes[j][0] < envelopes[i][0] && envelopes[j][1] < envelopes[i][1])
+                    f[i] = max(f[i], f[j] + 1);        
+            }
+        }
+        return *max_element(f.begin(), f.end());
+    }
+};
+
+```
+
+* **方法二：第一维递增，第二维递减的排序**
+
+  上面的方法，我们在循环中对两个维度都进行判断是否严格递增的。其实有个技巧，**可以减少第一个维度的判断**。
+
+先看个例子，假如排序的结果是下面这样：
+
+[[2, 3], [5, 4], [6, 5], [6, 7]]
+
+如果我们只看第二个维度 [3, 4, 5, 7]，会得出最长递增子序列的长度是 4 的结论。实际上，由于第 3 和第 4 个信封的第一个维度都是 6，导致他们不能套娃。所以，**利用第一个维度递增，第二个维度递减的顺序排序**，会得到下面的结果：
+
+[[2, 3], [5, 4], [6, 7], [6, 5]]
+
+这个时候，只看第二个维度 [3, 4, 7, 5]，就会得到最长递增子序列的长度是 3 的正确结果。
+
+```C++
+class Solution {
+public:
+    int maxEnvelopes(vector<vector<int>>& envelopes) {
+        if (envelopes.size() == 0)
+            return 0;
+        
+        int len = envelopes.size();
+        sort(envelopes.begin(), envelopes.end(), [](const auto &a, const auto &b)
+            { return a[0] < b[0] || (a[0] == b[0] && a[1] > b[1]); }
+            );
+
+        vector<int> f(len, 1);
+        for (int i = 1; i < len; ++ i)
+        {
+            for (int j = 0; j < i; ++ j)
+            {
+                if (envelopes[j][1] < envelopes[i][1])
+                    f[i] = max(f[i], f[j] + 1);
+            }
+        }
+
+        return *max_element(f.begin(), f.end());
+    }
+};
+```
+
+* **方法三：基于二分查找的动态规划**
+
+经过第一维度递增，第二维度递减排序后，只需要找出第二维度的单调递增子序列，可以用二分法的思想，首先定义一个数组 *f* 用于维护第二维度的最长单调子序列，每次遍历到一个新的值 *num*，将该值与数组 *f* 的末尾进行比较，大于则直接推入，否则利用二分法查找数组 *f* 中比 *num* 小的最大值，将其替换。
+
+```C++
+class Solution {
+public:
+    int maxEnvelopes(vector<vector<int>>& envelopes) {
+        if (envelopes.empty()) {
+            return 0;
+        }
+        
+        int n = envelopes.size();
+        sort(envelopes.begin(), envelopes.end(), [](const auto& e1, const auto& e2) {
+            return e1[0] < e2[0] || (e1[0] == e2[0] && e1[1] > e2[1]);
+        });
+
+        vector<int> f = {envelopes[0][1]};
+        for (int i = 1; i < n; ++i) {
+            if (int num = envelopes[i][1]; num > f.back()) {
+                f.push_back(num);
+            }
+            else {
+                auto it = lower_bound(f.begin(), f.end(), num);
+                *it = num;
+            }
+        }
+        return f.size();
+    }
+};
+```
 
