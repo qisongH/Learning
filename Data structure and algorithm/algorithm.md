@@ -1365,3 +1365,113 @@ public:
 
 
 
+## 回溯法
+
+[leetcode 131.分割回文串](https://leetcode-cn.com/problems/palindrome-partitioning/)
+
+>给你一个字符串 s，请你将 s 分割成一些子串，使每个子串都是 回文串 。返回 s 所有可能的分割方案。
+>
+>回文串 是正着读和反着读都一样的字符串。
+>
+>示例 1：
+>
+>输入：s = "aab"
+>输出：[["a","a","b"],["aa","b"]]
+>示例 2：
+>
+>输入：s = "a"
+>输出：[["a"]]
+
+**解题思路**
+
+题意：把输入字符串分割成回文子串的所有可能的结果。
+
+**回溯法**
+看到题目要求**「所有可能的结果」**，而不是「结果的个数」，一般情况下，**我们就知道需要暴力搜索所有的可行解了，可以用「回溯法」**。
+
+**「回溯法」实际上一个类似枚举的搜索尝试过程，主要是在搜索尝试过程中寻找问题的解，当发现已不满足求解条件时，就「回溯」返回，尝试别的路径**。
+
+回溯法是一种算法思想，而递归是一种编程方法，回溯法可以用递归来实现。
+
+回溯法的整体思路是：搜索每一条路，每次回溯是对具体的一条路径而言的。对当前搜索路径下的的未探索区域进行搜索，则可能有两种情况：
+
+1. 当前**未搜索区域满足结束条件**，则保存当前路径并退出当前搜索；
+
+2. 当前未搜索区域需要继续搜索，则遍历当前所有可能的选择：如果该选择符合要求，则把当前选择加入当前的搜索路径中，并继续搜索新的未探索区域。
+
+   上面说的未搜索区域是指搜索某条路径时的未搜索区域，并不是全局的未搜索区域。
+
+回溯法搜所有可行解的模板一般是这样的（今天刚构思的，欢迎拍砖）：
+
+```python
+res = []
+path = []
+
+def backtrack(未探索区域, res, path):
+    if 未探索区域满足结束条件:
+        res.add(path) # 深度拷贝
+        return
+    for 选择 in 未探索区域当前可能的选择:
+        if 当前选择符合要求:
+            path.add(当前选择)
+            backtrack(新的未探索区域, res, path)
+            path.pop()
+```
+
+*backtrack* 的含义是：**未探索区域中到达结束条件的所有可能路径**，path 变量是保存的是一条路径，res 变量保存的是所有搜索到的路径。所以当「未探索区域满足结束条件」时，需要把 path 放到结果 res 中。
+
+*path.pop()* 是啥意思呢？它是编程实现上的一个要求，**即我们从始至终只用了一个变量 path，所以当对 path 增加一个选择并 backtrack 之后，需要清除当前的选择，防止影响其他路径的搜索**。
+
+本题需要我们把字符串分成一系列的回文子串，按照模板，我们的思路应该是这样的：
+
+1. **未探索区域**：剩余的未搜索的字符串 s；
+2. **结束条件**：s 为空；
+3. **未探索区域当前可能的选择**：每次选择可以选取 s 的 1 - length 个字符，cur = s[0...i]；
+4. **当前选择符合要求**：cur 是回文字符串 isPalindrome(cur)；
+5. **新的未探索区域**：s 去除掉 cur 的剩余字符串，s[i + 1...N]。
+
+```C++
+class Solution {
+public:
+    vector<vector<string>> partition(string s) {
+        vector<vector<string> > ans;
+        backtrack(s, ans, {});
+        return ans;
+    }
+
+    void backtrack(string s, vector<vector<string> > &ans, vector<string> path)
+    {
+        if (s.empty())
+        {
+            ans.push_back(path);
+            return;
+        }
+
+        for (int i = 1; i <= s.size(); ++ i)
+        {
+            string pre = s.substr(0, i);
+            if (isPalindrome(pre))
+            {
+                path.push_back(pre);
+                backtrack(s.substr(i, s.size()), ans, path);
+                path.pop_back();
+            }
+        }
+    }
+
+    bool isPalindrome(string s)
+    {
+        if (s.empty()) return true;
+        int start = 0, end = s.size() - 1;
+        while (start <= end)
+        {
+            if (s[start] != s[end])
+                return false;
+            start ++;
+            end --;
+        }
+        return true;
+    }
+};
+```
+
