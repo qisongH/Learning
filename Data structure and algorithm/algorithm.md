@@ -1700,9 +1700,170 @@ public:
 
 
 
+### 前缀树
+
+**例题**
+
+[leetcode 208. 实现Trie（前缀树）](https://leetcode-cn.com/problems/implement-trie-prefix-tree/)
+
+>Trie（发音类似 "try"）或者说 **前缀树** 是一种树形数据结构，用于高效地存储和检索字符串数据集中的键。这一数据结构有相当多的应用情景，例如*自动补完和拼写检查*。
+>
+>请你实现 Trie 类：
+>
+>* Trie() 初始化前缀树对象。
+>
+>* void insert(String word) 向前缀树中插入字符串 word 。
+>* boolean search(String word) 如果字符串 word 在前缀树中，返回 true（即，在检索之前已经插入）；否则，返回 false 。
+>* boolean startsWith(String prefix) 如果之前已经插入的字符串 word 的前缀之一为 prefix ，返回 true ；否则，返回 false 。
+>
+>**示例：**
+>
+>**输入**
+>["Trie", "insert", "search", "search", "startsWith", "insert", "search"]
+>[[], ["apple"], ["apple"], ["app"], ["app"], ["app"], ["app"]]
+>**输出**
+>[null, null, true, false, true, null, true]
+>
+>**解释**
+>Trie trie = new Trie();
+>trie.insert("apple");
+>trie.search("apple");   // 返回 True
+>trie.search("app");     // 返回 False
+>trie.startsWith("app"); // 返回 True
+>trie.insert("app");
+>trie.search("app");     // 返回 True
 
 
 
+**解题思路**
+
+1. **多叉树**
+
+二叉树的每个节点只有两个孩子，**那如果每个节点可以有多个孩子呢？这就形成了多叉树。多叉树的子节点数目一般不是固定的，所以会用变长数组来保存所有的子节点的指针**。多叉树的结构是下面这样：
+
+```C++
+class TreeNode {
+    int val;
+    vector<TreeNode*> children;
+}
+```
+
+可视化：
+
+![](https://i.loli.net/2021/04/15/jm1cH9PIaVnAkuf.jpg)
+
+**前缀树**
+（只保存小写字符的）「前缀树」是一种特殊的多叉树，它的 TrieNode 中 chidren 是一个大小为 26 的一维数组，分别对应了26个英文字符 'a' ~ 'z'，也就是说形成了一棵 26叉树。
+
+前缀树的结构可以定义为下面这样。
+里面存储了两个信息：
+
+* isWord 表示从根节点到当前节点为止，该路径是否形成了一个有效的字符串。
+* children 是该节点的所有子节点。
+
+```C++
+class TrieNode {
+public:
+    vector<TrieNode *> children;
+    bool isWord;
+    TriNode() : isWord(false), children(26, nullptr) {}
+    ~TrieNode() {
+        for (auto &c : children)
+            delete c;
+    }
+}
+```
+
+**构建**
+在构建前缀树的时候，按照下面的方法：
+
+* 根节点不保存任何信息；
+
+* 关键词放到「前缀树」时，需要把它拆成各个字符，每个字符按照其在 'a' ~ 'z' 的序号，放在对应的 chidren 里面。下一个字符是当前字符的子节点。
+
+* 一个输入字符串构建「前缀树」结束的时候，需要把该节点的 isWord 标记为 true，说明从根节点到当前节点的路径，构成了一个关键词。
+
+* 下面是一棵「前缀树」，其中保存了 {"am", "an", "as", "b", "c", "cv"} 这些关键词。图中红色表示 isWord 为 true。
+
+  看下面这个图的时候需要注意：
+
+所有以相同字符开头的字符串，会聚合到同一个子树上。比如 {"am", "an", "as"} ；
+并不一定是到达叶子节点才形成了一个关键词，只要 isWord 为true，那么从根节点到当前节点的路径就是关键词。比如 {"c", "cv"} ；
+
+![](https://i.loli.net/2021/04/15/1VjZAUIr2vPubsG.jpg)
+
+
+
+```C++
+class TrieNode {
+public:
+    vector<TrieNode *> children;
+    bool isWord;
+    TrieNode() : isWord(false), children(26, nullptr) {};
+    ~TrieNode() {
+        for (auto &c : children)
+            delete c;
+    }
+};
+
+class Trie {
+private:
+    TrieNode *root = nullptr;
+
+public:
+    /** Initialize your data structure here. */
+    Trie() {
+        root = new TrieNode();
+    }
+    
+    /** Inserts a word into the trie. */
+    void insert(string word) {
+        TrieNode *p = root;
+        for (char a : word)
+        {
+            int i = a - 'a';
+            if (!p->children[i])
+                p->children[i] = new TrieNode();
+            p = p->children[i];
+        }
+        p->isWord = true;
+    }
+    
+    /** Returns if the word is in the trie. */
+    bool search(string word) {
+        TrieNode *p = root;
+        for (char a : word)
+        {
+            int i = a - 'a';
+            if (!p->children[i])
+                return false;
+            p = p->children[i];
+        }
+        return p->isWord;
+    }
+    
+    /** Returns if there is any word in the trie that starts with the given prefix. */
+    bool startsWith(string prefix) {
+        TrieNode *p = root;
+        for (char a : prefix)
+        {
+            int i = a - 'a';
+            if (!p->children[i])
+                return false;
+            p = p->children[i];
+        }
+        return true;
+    }
+};
+
+/**
+ * Your Trie object will be instantiated and called as such:
+ * Trie* obj = new Trie();
+ * obj->insert(word);
+ * bool param_2 = obj->search(word);
+ * bool param_3 = obj->startsWith(prefix);
+ */
+```
 
 
 
