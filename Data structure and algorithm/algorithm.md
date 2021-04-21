@@ -1977,3 +1977,106 @@ public:
 };
 ```
 
+
+
+## KMP算法
+
+[leetcode 28.实现strStr()](https://leetcode-cn.com/problems/implement-strstr/)
+
+>实现 strStr() 函数。
+>
+>给你两个字符串 haystack 和 needle ，请你在 haystack 字符串中找出 needle 字符串出现的第一个位置（下标从 0 开始）。如果不存在，则返回  -1 。
+>
+>说明：
+>
+>当 needle 是空字符串时，我们应当返回什么值呢？这是一个在面试中很好的问题。
+>
+>对于本题而言，**当 needle 是空字符串时我们应当返回 0** 。这与 C 语言的 strstr() 以及 Java 的 indexOf() 定义相符。
+>
+
+
+
+示例 1：
+
+```
+输入：haystack = "hello", needle = "ll"
+输出：2
+```
+
+示例 2：
+
+```
+输入：haystack = "aaaaa", needle = "bba"
+输出：-1
+```
+
+示例 3：
+
+```
+输入：haystack = "", needle = ""
+输出：0
+```
+
+
+
+**具体思路和方法：**
+
+[KMP详解](https://leetcode-cn.com/problems/implement-strstr/solution/shua-chuan-lc-shuang-bai-po-su-jie-fa-km-tb86/)
+
+```C++
+class Solution {
+public:
+    int strStr(string haystack, string needle) {
+        if (needle.empty())
+            return 0;
+        return index_KMP(haystack, needle);
+    }
+
+    // 算法实现
+    int index_KMP(string &haystack, string &needle)
+    {
+        if (haystack.size() < needle.size())
+            return -1;
+        int len1 = haystack.size(), len2 = needle.size();
+        int *pnext = new int [len2 + 1];
+        get_next(needle, pnext);
+        int i = 0, j = 0;
+        while (i < len1 && j < len2)
+        {
+            if (j == -1 || haystack[i] == needle[j])
+            {
+                ++ i;
+                ++ j;
+            }
+            else 
+                j = pnext[j];
+        }
+        if (j == len2)
+            return i - len2;
+        else 
+            return -1;
+    }
+
+    // 构建next串
+    void get_next(string &needle, int *next)
+    {
+        int i = 0, j = -1;
+        next[0] = -1;
+        int len = needle.size();
+        while (i < len)
+        {
+            if (j == -1 || needle[i] == needle[j])
+            {
+                ++ i;
+                ++ j;
+                next[i] = j;
+            }
+            else 
+                j = next[j];
+        }
+    }
+};
+```
+
+
+
