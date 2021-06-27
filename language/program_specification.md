@@ -88,6 +88,16 @@
 
 
 
+![](https://i.loli.net/2021/06/15/A2B7iW8wpLgrDzJ.png)
+
+void* 转换类似C语言中的强制转换，它不会进行语法检查，是不安全的行为；
+
+C++ 中的 dynamic_cast<type> 转换具有类型检查的功能；
+
+*BaseA、BaseB* 的指针指向的地址不一样，动态转换过程中会对其进行相应的偏移。
+
+
+
 ## 类的成员
 
 ![](https://i.loli.net/2021/05/24/SXORzvimw1ZPeq3.png)
@@ -104,9 +114,19 @@
 
 
 
+![](https://i.loli.net/2021/06/15/DR7AXFwQGkhVl8c.png)
+
+调用的函数是运行时决定，**而缺省参数是编译时决定的**。
+
+
+
 ## 析构函数
 
 ![](https://i.loli.net/2021/05/24/kc6mJtvRhGxgZB9.png)
+
+
+
+![](https://i.loli.net/2021/06/15/P6oLcwMuCgbkJDN.png)
 
 
 
@@ -114,5 +134,77 @@
 
 ![](https://i.loli.net/2021/05/24/MVCUThznFS5pXdm.png)
 
-**POD对象：如C语言中的struct（只有变量无函数）**
+**POD对象：如C语言中的struct（只有数据成员无任何构造函数、析构函数）**
+
+
+
+## Lambda表达式
+
+![](https://i.loli.net/2021/06/15/7C5oW1Nd9KyMFre.png)
+
+*lambda* 表达式 [=] 一般是在上下文按值捕获，理论上 *data++* 不应该改变成员变量的值；
+
+但是在上述程序中 [=] **会捕获 *this* 指针**，*data++* 会改变成员变量的值；
+
+若仍想要以值捕获的形式传递参数，应当如右图所示**复制 *this* 的副本**。 
+
+
+
+![](https://i.loli.net/2021/06/15/jkEW4nyiVzeKGJX.png)
+
+
+
+## new操作符
+
+![](https://i.loli.net/2021/06/15/x8Q4rfyW7hpvBbq.png)
+
+*new* 操作符不会返回空指针（即使失败）；
+
+应当**使用 C++ 提供的异常处理机制**；
+
+
+
+## 智能指针
+
+![](https://i.loli.net/2021/06/15/nZXQv3eP1um7fTF.png)
+
+问题1：重复写两次 MyClass 类型会**增加维护成本和时间**；
+
+问题2：若第二个 new MyClass 出现异常，会导致第一个 new 发生**内存泄漏**；
+
+**解决方法**：应当使用 C++ 集成好的创建智能指针函数；
+
+
+
+## 迭代器
+
+![](https://i.loli.net/2021/06/15/eJOjsM3vfBX7Vmb.png)
+
+问题：增删元素会导致迭代器（vector、list、map等）失效！
+
+解决方法：使用 STL 自带的函数；
+
+
+
+## 头文件
+
+![](https://i.loli.net/2021/06/16/tYu7Egy4sNMlSqh.png)
+
+![](https://i.loli.net/2021/06/16/UceQ29sRdNG1LMD.png)
+
+*main.cpp* 中重复包含 *a.h* 两次，可能导致编译出错，同一个变量可能会被定义两次；
+
+应当采用宏进行保护；
+
+
+
+## 代码风格约定
+
+![](https://i.loli.net/2021/06/16/rFhHb752oitNGA3.png)
+
+![](https://i.loli.net/2021/06/16/GnNBD1qOuoEpKde.png)
+
+![](https://i.loli.net/2021/06/16/Yi4nuQdMeVWgrwC.png)
+
+![](https://i.loli.net/2021/06/16/9Fgf5IjHJtVTnqv.png)
 
